@@ -1,1237 +1,308 @@
 <!DOCTYPE html>
 <html lang="en" data-theme="dark">
 <head>
-<meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
-<title>V2V INTELLIGENT SPECTRUM ANAYSIS AND ADAPTIVE CHANNEL FILTERING USING SNR,POWER ESTIMATION, AND CLUSTERING FOR COGNITIVE RADIO APPLICATIONS</title>
-<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@300;400;500;600;700&family=Share+Tech+Mono&family=Orbitron:wght@400;600;700;900&display=swap" rel="stylesheet"/>
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-<style>
-/* ═══════════════════════════════════════════════════════
-   ROOT VARIABLES — DARK / LIGHT THEMES
-═══════════════════════════════════════════════════════ */
-:root {
-  --transition: 0.35s ease;
-}
-[data-theme="dark"] {
-  --bg:       #020912;
-  --bg2:      #050f22;
-  --bg3:      #071428;
-  --card:     #071428;
-  --card2:    #0a1a35;
-  --border:   #0e2448;
-  --border2:  #163260;
-  --acc:      #00e5ff;
-  --acc2:     #0097b2;
-  --gold:     #ffd740;
-  --red:      #ff3b3b;
-  --green:    #00e676;
-  --warn:     #ff9100;
-  --txt:      #ddeeff;
-  --txt2:     #7aa5cc;
-  --txt3:     #3a6080;
-  --shadow:   rgba(0,229,255,0.12);
-  --grid-c:   rgba(0,229,255,0.03);
-}
-[data-theme="light"] {
-  --bg:       #eef4fb;
-  --bg2:      #e2ecf7;
-  --bg3:      #d5e4f2;
-  --card:     #ffffff;
-  --card2:    #f4f9ff;
-  --border:   #c2d8ef;
-  --border2:  #a8c5e0;
-  --acc:      #0076a8;
-  --acc2:     #005a80;
-  --gold:     #e6a000;
-  --red:      #d32f2f;
-  --green:    #2e7d32;
-  --warn:     #e65100;
-  --txt:      #0d2137;
-  --txt2:     #3a6080;
-  --txt3:     #8ab0cc;
-  --shadow:   rgba(0,118,168,0.12);
-  --grid-c:   rgba(0,118,168,0.05);
-}
-
-/* ═══════════════════════════════════════════════════════
-   BASE
-═══════════════════════════════════════════════════════ */
-*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-html{scroll-behavior:smooth}
-body{
-  background:var(--bg);color:var(--txt);
-  font-family:'Rajdhani',sans-serif;
-  min-height:100vh;overflow-x:hidden;
-  transition:background var(--transition),color var(--transition);
-}
-body::before{
-  content:'';position:fixed;inset:0;
-  background-image:linear-gradient(var(--grid-c) 1px,transparent 1px),
-    linear-gradient(90deg,var(--grid-c) 1px,transparent 1px);
-  background-size:44px 44px;pointer-events:none;z-index:0;
-  transition:background-image var(--transition);
-}
-
-/* ═══════════════════════════════════════════════════════
-   PAGE SYSTEM
-═══════════════════════════════════════════════════════ */
-.page{display:none;position:relative;z-index:1;min-height:100vh}
-.page.active{display:block}
-
-/* ═══════════════════════════════════════════════════════
-   ── PAGE 1: LANDING / PASSKEY ──
-═══════════════════════════════════════════════════════ */
-#page-landing{
-  display:flex;flex-direction:column;align-items:center;justify-content:center;
-  min-height:100vh;padding:30px 20px;
-}
-#page-landing.active{display:flex}
-
-.landing-wrap{
-  width:100%;max-width:580px;text-align:center;
-}
-
-.landing-badge{
-  display:inline-block;
-  font-family:'Share Tech Mono',monospace;font-size:10px;letter-spacing:0.22em;
-  color:var(--acc);border:1px solid var(--border2);
-  background:rgba(0,229,255,0.06);
-  padding:5px 18px;border-radius:30px;margin-bottom:18px;
-  text-transform:uppercase;
-}
-[data-theme="light"] .landing-badge{background:rgba(0,118,168,0.08)}
-
-.landing-title{
-  font-family:'Orbitron',monospace;font-size:clamp(1.8rem,5vw,3.2rem);
-  font-weight:900;letter-spacing:0.05em;
-  color:var(--txt);line-height:1.1;margin-bottom:6px;
-}
-.landing-title span{color:var(--acc)}
-
-.landing-sub{
-  font-family:'Share Tech Mono',monospace;font-size:11px;
-  letter-spacing:0.18em;color:var(--txt2);margin-bottom:32px;text-transform:uppercase;
-}
-
-/* Team cards */
-.team-grid{
-  display:grid;grid-template-columns:repeat(2,1fr);gap:10px;
-  margin-bottom:36px;
-}
-.team-card{
-  background:var(--card);border:1px solid var(--border);
-  border-radius:10px;padding:14px 16px;text-align:left;
-  position:relative;overflow:hidden;
-  transition:border-color .25s,transform .25s;
-}
-.team-card:hover{border-color:var(--acc2);transform:translateY(-2px)}
-.team-card::before{
-  content:'';position:absolute;top:0;left:0;right:0;height:2px;
-  background:linear-gradient(90deg,transparent,var(--acc),transparent);opacity:.5;
-}
-.tc-role{
-  font-family:'Share Tech Mono',monospace;font-size:8px;
-  letter-spacing:0.18em;color:var(--acc);text-transform:uppercase;margin-bottom:4px;
-}
-.tc-name{
-  font-family:'Orbitron',monospace;font-size:13px;
-  font-weight:700;color:var(--txt);letter-spacing:0.04em;
-}
-
-/* Passkey form */
-.key-form{
-  background:var(--card);border:1px solid var(--border2);
-  border-radius:14px;padding:28px 32px;position:relative;overflow:hidden;
-}
-.key-form::before{
-  content:'';position:absolute;inset:0;
-  background:radial-gradient(ellipse at 50% 0%,rgba(0,229,255,0.05) 0%,transparent 65%);
-  pointer-events:none;
-}
-[data-theme="light"] .key-form::before{background:radial-gradient(ellipse at 50% 0%,rgba(0,118,168,0.06) 0%,transparent 65%)}
-
-.key-label{
-  font-family:'Share Tech Mono',monospace;font-size:10px;
-  letter-spacing:0.18em;color:var(--txt2);text-transform:uppercase;
-  margin-bottom:12px;display:block;
-}
-.key-input-wrap{display:flex;gap:10px}
-.key-input{
-  flex:1;background:var(--bg2);border:1px solid var(--border2);
-  border-radius:8px;padding:12px 16px;
-  font-family:'Share Tech Mono',monospace;font-size:14px;
-  letter-spacing:0.2em;color:var(--txt);outline:none;
-  transition:border-color .25s,box-shadow .25s;
-}
-.key-input:focus{border-color:var(--acc);box-shadow:0 0 0 3px rgba(0,229,255,0.1)}
-[data-theme="light"] .key-input:focus{box-shadow:0 0 0 3px rgba(0,118,168,0.12)}
-.key-input::placeholder{color:var(--txt3);letter-spacing:0.1em}
-
-.key-btn{
-  background:var(--acc);border:none;border-radius:8px;
-  padding:12px 22px;font-family:'Orbitron',monospace;font-size:11px;
-  font-weight:700;letter-spacing:0.1em;color:#000;cursor:pointer;
-  transition:all .2s;white-space:nowrap;
-}
-.key-btn:hover{filter:brightness(1.15);box-shadow:0 0 20px var(--shadow)}
-
-.key-error{
-  margin-top:10px;font-family:'Share Tech Mono',monospace;font-size:10px;
-  letter-spacing:0.1em;color:var(--red);display:none;
-}
-.key-error.show{display:block}
-
-/* Hint */
-.key-hint{
-  margin-top:10px;font-family:'Share Tech Mono',monospace;
-  font-size:9px;color:var(--txt3);letter-spacing:0.12em;
-}
-
-/* Theme toggle on landing */
-.theme-toggle-landing{
-  position:fixed;top:18px;right:22px;z-index:999;
-}
-
-/* ═══════════════════════════════════════════════════════
-   ── SHARED NAV (Ambulance + V2V pages) ──
-═══════════════════════════════════════════════════════ */
-.topnav{
-  position:sticky;top:0;z-index:200;
-  background:rgba(2,9,18,0.96);border-bottom:1px solid var(--border2);
-  backdrop-filter:blur(18px);
-  display:flex;align-items:center;justify-content:space-between;
-  padding:0 20px;height:52px;
-  transition:background var(--transition),border-color var(--transition);
-}
-[data-theme="light"] .topnav{background:rgba(238,244,251,0.97)}
-
-.nav-left{display:flex;align-items:center;gap:12px}
-.nav-logo{font-family:'Orbitron',monospace;font-size:15px;font-weight:700;color:var(--acc);letter-spacing:0.06em}
-.nav-sep{color:var(--txt3);font-size:14px}
-.nav-sub{font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--txt2);letter-spacing:0.18em;text-transform:uppercase}
-.nav-right{display:flex;align-items:center;gap:14px}
-.nav-live{font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--green);letter-spacing:0.16em;display:flex;align-items:center;gap:6px}
-.pulse-dot{width:7px;height:7px;border-radius:50%;background:var(--green);display:inline-block;animation:pulseGlow 1.4s infinite}
-@keyframes pulseGlow{0%,100%{opacity:1;box-shadow:0 0 0 0 rgba(0,230,118,.5)}50%{opacity:.4;box-shadow:0 0 0 7px transparent}}
-
-/* Nav buttons */
-.nav-btn{
-  font-family:'Share Tech Mono',monospace;font-size:9px;
-  letter-spacing:0.14em;border:1px solid var(--border2);
-  background:transparent;color:var(--txt2);
-  padding:5px 14px;border-radius:20px;cursor:pointer;
-  transition:all .2s;text-transform:uppercase;
-}
-.nav-btn:hover,.nav-btn.active-page{
-  color:var(--acc);border-color:var(--acc2);
-  background:rgba(0,229,255,0.07);
-}
-[data-theme="light"] .nav-btn:hover,[data-theme="light"] .nav-btn.active-page{
-  background:rgba(0,118,168,0.1);
-}
-
-/* Theme toggle */
-.theme-toggle{
-  display:flex;align-items:center;gap:7px;cursor:pointer;
-  font-family:'Share Tech Mono',monospace;font-size:9px;
-  letter-spacing:0.12em;color:var(--txt2);
-}
-.toggle-track{
-  width:36px;height:19px;border-radius:10px;
-  background:var(--border2);position:relative;
-  transition:background .3s;flex-shrink:0;
-}
-[data-theme="light"] .toggle-track{background:var(--acc2)}
-.toggle-thumb{
-  position:absolute;top:3px;left:3px;
-  width:13px;height:13px;border-radius:50%;
-  background:var(--txt2);transition:transform .3s,background .3s;
-}
-[data-theme="light"] .toggle-thumb{transform:translateX(17px);background:#fff}
-
-/* ═══════════════════════════════════════════════════════
-   ── MAIN DASHBOARD LAYOUT ──
-═══════════════════════════════════════════════════════ */
-.dash{max-width:1440px;margin:0 auto;padding:18px 18px 76px;position:relative;z-index:1}
-
-/* Status Bar */
-.status-bar{
-  display:flex;align-items:center;gap:12px;flex-wrap:wrap;
-  padding:11px 20px;border-radius:10px;
-  border:1px solid var(--border2);background:var(--card);
-  margin-bottom:16px;transition:all .4s;
-}
-.status-bar.safe{border-color:rgba(0,230,118,.35);background:rgba(0,230,118,.05)}
-.status-bar.warning{border-color:rgba(255,145,0,.4);background:rgba(255,145,0,.06)}
-.status-bar.emergency{
-  border-color:rgba(255,59,59,.45);background:rgba(255,59,59,.07);
-  animation:emergPulse .75s infinite alternate;
-}
-@keyframes emergPulse{from{box-shadow:none}to{box-shadow:0 0 28px rgba(255,59,59,.35)}}
-.s-dot{width:10px;height:10px;border-radius:50%;background:var(--green);flex-shrink:0;transition:background .4s}
-.status-bar.warning .s-dot{background:var(--warn)}
-.status-bar.emergency .s-dot{background:var(--red);animation:pulseGlow .6s infinite}
-.s-status{font-family:'Orbitron',monospace;font-size:15px;font-weight:700;letter-spacing:.08em;flex:1;color:var(--green);transition:color .4s}
-.status-bar.warning .s-status{color:var(--warn)}
-.status-bar.emergency .s-status{color:var(--red)}
-.s-action{font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--txt2);letter-spacing:.08em}
-.s-sep{color:var(--txt3)}
-.s-priority{font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--acc);letter-spacing:.06em}
-.s-ttc{font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--txt2);margin-left:auto}
-.s-ttc strong{color:var(--txt)}
-
-/* Grids */
-.row3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin-bottom:14px}
-.row2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin-bottom:14px}
-.span2{grid-column:span 2}
-@media(max-width:900px){.row3{grid-template-columns:1fr 1fr}.span2{grid-column:span 1}}
-@media(max-width:600px){.row3,.row2{grid-template-columns:1fr}.span2{grid-column:span 1}}
-
-/* Card */
-.card{
-  background:var(--card);border:1px solid var(--border2);
-  border-radius:10px;padding:16px;position:relative;overflow:hidden;
-  transition:background var(--transition),border-color var(--transition);
-}
-.card::after{
-  content:'';position:absolute;top:0;left:0;right:0;height:1px;
-  background:linear-gradient(90deg,transparent,var(--acc2),transparent);opacity:.4;
-}
-.card-hdr{
-  font-family:'Share Tech Mono',monospace;font-size:9px;font-weight:500;
-  letter-spacing:.18em;color:var(--acc);text-transform:uppercase;
-  margin-bottom:14px;padding-bottom:8px;border-bottom:1px solid var(--border);
-}
-
-/* Section Divider */
-.sec-title{
-  font-family:'Orbitron',monospace;font-size:11px;font-weight:600;
-  letter-spacing:.14em;color:var(--txt2);text-transform:uppercase;
-  margin:6px 0 10px;padding-left:10px;border-left:3px solid var(--acc2);
-}
-
-/* Sliders */
-.slider-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-@media(max-width:560px){.slider-grid{grid-template-columns:1fr}}
-.slider-group{display:flex;flex-direction:column;gap:6px}
-.slider-lbl{display:flex;justify-content:space-between;align-items:center}
-.slider-name{font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--txt2);letter-spacing:.12em;text-transform:uppercase}
-.slider-num{font-family:'Orbitron',monospace;font-size:16px;color:var(--acc);line-height:1}
-.slider-unit{font-family:'Share Tech Mono',monospace;font-size:8px;color:var(--txt3)}
-input[type=range]{
-  -webkit-appearance:none;width:100%;height:4px;
-  background:var(--border2);border-radius:2px;outline:none;cursor:pointer;
-  transition:background .3s;
-}
-input[type=range]::-webkit-slider-thumb{
-  -webkit-appearance:none;width:14px;height:14px;border-radius:50%;
-  background:var(--acc);box-shadow:0 0 8px var(--shadow);cursor:pointer;transition:transform .15s;
-}
-input[type=range]::-webkit-slider-thumb:hover{transform:scale(1.3)}
-input[type=range].r-warn::-webkit-slider-thumb{background:var(--warn);box-shadow:0 0 8px rgba(255,145,0,.3)}
-input[type=range].r-red::-webkit-slider-thumb{background:var(--red);box-shadow:0 0 8px rgba(255,59,59,.3)}
-
-/* Metrics */
-.m-row{display:flex;align-items:baseline;gap:8px;padding:7px 0;border-bottom:1px solid var(--border)}
-.m-row:last-child{border-bottom:none}
-.m-lbl{font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--txt2);letter-spacing:.1em;flex:1;text-transform:uppercase}
-.m-val{font-family:'Orbitron',monospace;font-size:18px;color:var(--acc);line-height:1}
-.m-unit{font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--txt3)}
-
-.gauge-section{margin-bottom:10px}
-.g-label-row{display:flex;justify-content:space-between;margin-bottom:4px}
-.g-lbl{font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--txt2);letter-spacing:.1em;text-transform:uppercase}
-.g-pct{font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--txt)}
-.gauge-track{height:7px;background:var(--bg2);border-radius:4px;overflow:hidden;border:1px solid var(--border)}
-.gauge-fill{height:100%;border-radius:4px;background:linear-gradient(90deg,var(--green),var(--warn),var(--red));transition:width .5s ease}
-
-.ibox{
-  padding:8px 12px;border-radius:8px;border:1px solid var(--border);background:var(--card2);
-  font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--txt2);
-  letter-spacing:.06em;transition:all .4s;
-}
-.ibox.alert{border-color:rgba(255,145,0,.5);background:rgba(255,145,0,.07);color:var(--warn)}
-
-/* Channel bars */
-.ch-bars{display:flex;align-items:flex-end;gap:8px;height:110px;margin-bottom:12px;padding:0 2px}
-.ch-col{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;height:100%;justify-content:flex-end}
-.ch-bar{width:100%;border-radius:3px 3px 0 0;transition:height .4s,background .4s}
-.ch-bar.best{background:var(--green);box-shadow:0 0 10px rgba(0,230,118,.3)}
-.ch-bar.safety{background:var(--warn);box-shadow:0 0 10px rgba(255,145,0,.3)}
-.ch-bar.other{background:var(--acc2);opacity:.5}
-.ch-freq-lbl{font-family:'Share Tech Mono',monospace;font-size:8px;color:var(--txt3)}
-.ch-pwr-lbl{font-family:'Share Tech Mono',monospace;font-size:8px;color:var(--txt2)}
-
-.ch-assign{display:flex;flex-direction:column;gap:5px;margin-bottom:12px}
-.ch-row{display:flex;justify-content:space-between;align-items:center;padding:6px 10px;background:var(--card2);border-radius:8px;border:1px solid var(--border)}
-.ch-lbl{font-size:11px;font-weight:600;font-family:'Rajdhani',sans-serif}
-.ch-lbl.amb{color:#ff8a80}.ch-lbl.veh{color:#80d8ff}
-.ch-freq{font-family:'Orbitron',monospace;font-size:13px;font-weight:700;color:var(--acc)}
-
-.csv-hdr{font-family:'Share Tech Mono',monospace;font-size:8px;color:var(--txt3);letter-spacing:.16em;text-transform:uppercase;margin-bottom:7px}
-.csv-tbl{width:100%;border-collapse:collapse;font-family:'Share Tech Mono',monospace;font-size:10px}
-.csv-tbl th{color:var(--txt2);padding:4px 6px;text-align:left;border-bottom:1px solid var(--border);font-size:8px;letter-spacing:.1em}
-.csv-tbl td{padding:5px 6px;border-bottom:1px solid var(--border);color:var(--txt)}
-.csv-tbl tr:last-child td{border-bottom:none}
-.badge-c1{background:rgba(255,59,59,.12);color:#ff8a80;padding:1px 8px;border-radius:10px;font-size:8px}
-.badge-c2{background:rgba(0,229,255,.1);color:var(--acc);padding:1px 8px;border-radius:10px;font-size:8px}
-
-/* Road/Lane canvas */
-canvas.sim-canvas{display:block;width:100%;border-radius:8px;background:var(--bg2);margin-bottom:10px}
-.veh-strip{display:flex;gap:7px;flex-wrap:wrap}
-.veh-pill{display:flex;align-items:center;gap:5px;padding:5px 11px;border-radius:20px;border:1px solid var(--border2);background:var(--card2);font-family:'Share Tech Mono',monospace;font-size:10px}
-.veh-pill.amb{border-color:rgba(255,59,59,.3);color:#ff8a80}
-.veh-pill.veh{border-color:rgba(0,229,255,.3);color:#80d8ff}
-.veh-pill.dist{color:var(--txt2)}
-
-/* Warning panel */
-.warn-panel{
-  padding:11px 18px;border-radius:10px;border:1px solid var(--border);
-  font-family:'Share Tech Mono',monospace;font-size:11px;font-weight:500;
-  letter-spacing:.06em;text-align:center;margin-bottom:14px;
-  transition:all .3s;
-}
-.warn-panel.safe{color:var(--green);border-color:rgba(0,230,118,.3);background:rgba(0,230,118,.06)}
-.warn-panel.warning{color:var(--warn);border-color:rgba(255,145,0,.4);background:rgba(255,145,0,.08);animation:emergPulse .8s infinite alternate}
-.warn-panel.emergency{color:var(--red);border-color:rgba(255,59,59,.4);background:rgba(255,59,59,.09);animation:emergPulse .5s infinite alternate}
-
-/* Charts */
-.card canvas{max-height:210px}
-
-/* V2V lane labels */
-.lane-labels{display:flex;justify-content:space-around;font-family:'Share Tech Mono',monospace;font-size:8px;color:var(--txt3);letter-spacing:.12em;margin-top:4px;text-transform:uppercase}
-
-/* Pipeline nodes */
-.wf-nodes{display:flex;flex-wrap:wrap;align-items:center;gap:7px}
-.wf-node{font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--txt);background:var(--card2);border:1px solid var(--border2);padding:5px 12px;border-radius:20px}
-.wf-node.hi{border-color:var(--acc2);color:var(--acc);background:rgba(0,229,255,.07)}
-[data-theme="light"] .wf-node.hi{background:rgba(0,118,168,.1)}
-.wf-arr{color:var(--txt3);font-size:14px}
-
-/* Ticker */
-.ticker{
-  position:fixed;bottom:0;left:0;right:0;height:28px;
-  background:rgba(2,9,18,0.97);border-top:1px solid var(--border2);
-  overflow:hidden;display:flex;align-items:center;z-index:300;
-  backdrop-filter:blur(10px);
-  transition:background var(--transition);
-}
-[data-theme="light"] .ticker{background:rgba(238,244,251,0.97)}
-.ticker-inner{
-  white-space:nowrap;font-family:'Share Tech Mono',monospace;font-size:9px;
-  color:var(--acc);letter-spacing:.14em;
-  animation:scrollTick 45s linear infinite;display:inline-block;
-}
-@keyframes scrollTick{from{transform:translateX(100vw)}to{transform:translateX(-100%)}}
-
-/* ═══ THEME TOGGLE BUTTON ═══ */
-.theme-btn{
-  display:flex;align-items:center;gap:7px;cursor:pointer;
-  background:var(--card2);border:1px solid var(--border2);
-  border-radius:20px;padding:5px 12px;
-  font-family:'Share Tech Mono',monospace;font-size:9px;
-  color:var(--txt2);letter-spacing:.1em;transition:all .2s;
-}
-.theme-btn:hover{border-color:var(--acc);color:var(--acc)}
-.theme-icon{font-size:13px;line-height:1}
-
-/* ═══ LOGOUT ═══ */
-.nav-logout{
-  font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--txt3);
-  letter-spacing:.1em;text-decoration:none;border:1px solid var(--border);
-  padding:4px 12px;border-radius:20px;cursor:pointer;background:transparent;
-  transition:color .2s,border-color .2s;
-}
-.nav-logout:hover{color:var(--txt);border-color:var(--txt3)}
-</style>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>AI Spectrum & V2V — Dashboard</title>
+  <link rel="stylesheet" href="css/main.css"/>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;400;600&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet"/>
 </head>
 <body>
 
-<!-- ═══════════════════════════════════════════════════
-     PAGE 1 — LANDING / PASSKEY
-═══════════════════════════════════════════════════ -->
-<div class="page active" id="page-landing">
+<!-- TOP NAV -->
+<nav class="topnav" id="topnav">
+  <div class="nav-brand">
+    <span class="brand-icon">📡</span>
+    <span class="brand-text">SpectrumAI</span>
+  </div>
+  <div class="nav-tabs" id="navTabs">
+    <button class="nav-tab active" data-page="dataset" onclick="showPage('dataset')">📊 Dataset</button>
+    <button class="nav-tab" data-page="orange" onclick="showPage('orange')">🟠 Orange</button>
+    <button class="nav-tab" data-page="v2v" onclick="showPage('v2v')">🚗 V2V</button>
+    <button class="nav-tab" data-page="ambulance" onclick="showPage('ambulance')">🚑 Ambulance</button>
+    <button class="nav-tab" data-page="references" onclick="showPage('references')">📚 References</button>
+  </div>
+  <div class="nav-controls">
+    <span class="admin-badge" id="adminBadge" style="display:none">🔐 Admin</span>
+    <label class="theme-toggle">
+      <input type="checkbox" id="themeToggle" onchange="toggleTheme()"/>
+      <span class="slider">
+        <span class="sun">☀️</span>
+        <span class="moon">🌙</span>
+      </span>
+    </label>
+    <button class="logout-btn" onclick="doLogout()">⏻</button>
+    <button class="ham-btn" id="hamBtn" onclick="toggleMenu()">☰</button>
+  </div>
+</nav>
 
-  <!-- Theme toggle top-right -->
-  <button class="theme-btn theme-toggle-landing" onclick="toggleTheme()" aria-label="Toggle theme">
-    <span class="theme-icon" id="themeIconLanding">🌙</span>
-    <span id="themeTextLanding">DARK</span>
-  </button>
+<!-- WARNING TOAST -->
+<div class="warning-toast" id="warningToast"></div>
 
-  <div class="landing-wrap">
-    <div class="landing-badge">▲ V2V COMMUNICATION SYSTEM</div>
+<!-- PAGES -->
+<main class="main-content">
 
- <h1 class="landing-title">
-  V2V <span>SPECTRUM ANALYSIS USING SNR & POWER</span><br>
-  ADAPTIVE CHANNEL FILTERING WITH CLUSTERING
-</h1>
-    <p class="landing-sub">AI-Powered V2V Safety · Orange Data Mining · Adaptive Channel</p>
-
-   <!-- Team Members -->
-    <div class="team-grid">
-      <div class="team-card">
-        <div class="tc-role">project member</div>
-        <div class="tc-name">Arul Mozhi Varman S</div>
+  <!-- ===== DATASET PAGE ===== -->
+  <section class="page active" id="page-dataset">
+    <div class="page-header">
+      <h2 class="page-title">📊 Dataset Extraction</h2>
+      <p class="page-sub">Cognitive radio spectrum sensing — raw signal intelligence</p>
+      <button class="edit-btn admin-only" onclick="editDataset()" style="display:none">✏ Edit Content</button>
+    </div>
+    <div class="cards-grid" id="datasetCards">
+      <div class="info-card">
+        <div class="card-icon">🎯</div>
+        <h3>Spectrum Frequency Range</h3>
+        <ul class="bullet-list" id="freq-list">
+          <li>Operating band: <strong>880 MHz – 905 MHz</strong></li>
+          <li>Six discrete channels at 5 MHz spacing</li>
+          <li>Channels: 880, 885, 890, 895, 900, 905 MHz</li>
+          <li>Allocated for V2V DSRC communication</li>
+        </ul>
       </div>
-      <div class="team-card">
-        <div class="tc-role">project member</div>
-        <div class="tc-name">Hareselvan S S</div>
+      <div class="info-card">
+        <div class="card-icon">📶</div>
+        <h3>Power & SNR Readings</h3>
+        <ul class="bullet-list">
+          <li>Power levels: –72 to –102 dBm (measured)</li>
+          <li>SNR range: 11 dB to 22 dB per channel</li>
+          <li>Higher SNR → Better channel quality</li>
+          <li>Free channels identified via energy detection</li>
+        </ul>
       </div>
-      <div class="team-card">
-        <div class="tc-role">project member</div>
-        <div class="tc-name">Nandhakumar R</div>
+      <div class="info-card">
+        <div class="card-icon">🔍</div>
+        <h3>Channel Status Classification</h3>
+        <ul class="bullet-list">
+          <li>Status: OCCUPIED / FREE per channel</li>
+          <li>Channels 880, 890, 900 MHz → OCCUPIED</li>
+          <li>Channels 885, 895, 905 MHz → FREE</li>
+          <li>Dynamic sensing updates every cycle</li>
+        </ul>
       </div>
-      <div class="team-card">
-        <div class="tc-role">Guide</div>
-        <div class="tc-name">......</div>
+      <div class="info-card">
+        <div class="card-icon">🧠</div>
+        <h3>AI-Based Decision Logic</h3>
+        <ul class="bullet-list">
+          <li>Best channel = FREE channel with max SNR</li>
+          <li>Backup channel = 2nd best FREE channel</li>
+          <li>Collision risk → Switch to backup instantly</li>
+          <li>Interference → Redirect through alternate path</li>
+        </ul>
+      </div>
+      <div class="info-card">
+        <div class="card-icon">🚗</div>
+        <h3>V2V Communication Parameters</h3>
+        <ul class="bullet-list">
+          <li>Vehicle speed input: 0–120 km/h (adjustable)</li>
+          <li>TTC threshold: &lt;2s = High Risk, &lt;4s = Medium</li>
+          <li>Closing speed determines collision imminence</li>
+          <li>Real-time risk scoring: 0, 0.7, or 1.0</li>
+        </ul>
+      </div>
+      <div class="info-card">
+        <div class="card-icon">📡</div>
+        <h3>Spectrum Sensing Method</h3>
+        <ul class="bullet-list">
+          <li>Energy detection on each 5 MHz sub-band</li>
+          <li>Threshold-based occupancy classification</li>
+          <li>Fast switching (&lt;50ms) for safety-critical data</li>
+          <li>Cognitive radio principle: sense → decide → transmit</li>
+        </ul>
       </div>
     </div>
 
-    <!-- Passkey -->
-    <div class="key-form">
-      <label class="key-label">🔒 Enter Access Passkey</label>
-      <div class="key-input-wrap">
-        <input class="key-input" id="passkeyInput" type="password"
-               placeholder="ENTER PASSKEY" maxlength="20"
-               onkeydown="if(event.key==='Enter') checkPasskey()"/>
-        <button class="key-btn" onclick="checkPasskey()">ENTER →</button>
-      </div>
-      <div class="key-error" id="keyError">✕ INCORRECT PASSKEY. TRY AGAIN.</div>
-      <div class="key-hint">Hint: V2V2024</div>
+    <!-- Dataset Table -->
+    <div class="section-divider"></div>
+    <h3 class="section-subtitle">📋 Raw Channel Dataset</h3>
+    <div class="table-wrap">
+      <table class="data-table">
+        <thead>
+          <tr><th>#</th><th>Frequency (MHz)</th><th>Power (dBm)</th><th>SNR (dB)</th><th>Status</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>1</td><td>880</td><td>–72</td><td>22</td><td><span class="badge-occ">OCCUPIED</span></td></tr>
+          <tr><td>2</td><td>885</td><td>–95</td><td>14</td><td><span class="badge-free">FREE</span></td></tr>
+          <tr><td>3</td><td>890</td><td>–78</td><td>18</td><td><span class="badge-occ">OCCUPIED</span></td></tr>
+          <tr><td>4</td><td>895</td><td>–102</td><td>11</td><td><span class="badge-free">FREE</span></td></tr>
+          <tr><td>5</td><td>900</td><td>–75</td><td>20</td><td><span class="badge-occ">OCCUPIED</span></td></tr>
+          <tr><td>6</td><td>905</td><td>–98</td><td>12</td><td><span class="badge-free">FREE</span></td></tr>
+        </tbody>
+      </table>
     </div>
+  </section>
+
+  <!-- ===== ORANGE PAGE ===== -->
+  <section class="page" id="page-orange">
+    <div class="page-header">
+      <h2 class="page-title">🟠 Orange — Data Mining</h2>
+      <p class="page-sub">Visual intelligence from spectrum and traffic datasets</p>
+      <button class="edit-btn admin-only" id="addOrangeBtn" onclick="addOrangeItem()" style="display:none">＋ Add Item</button>
+    </div>
+    <div class="orange-grid" id="orangeGrid">
+      <!-- Items injected by JS -->
+    </div>
+  </section>
+
+  <!-- ===== V2V PAGE ===== -->
+  <section class="page" id="page-v2v">
+    <div class="page-header">
+      <h2 class="page-title">🚗 V2V Communication System</h2>
+      <p class="page-sub">Time-To-Collision logic with intelligent channel switching</p>
+    </div>
+
+    <!-- V2V Simulation -->
+    <div class="sim-container">
+      <div class="sim-card road-card">
+        <h3>🛣 Live Road Simulation</h3>
+        <canvas id="roadCanvas" width="400" height="300"></canvas>
+        <div class="sim-controls">
+          <label>Bus Speed: <span id="busVal">80</span> km/h</label>
+          <input type="range" id="busSlider" min="0" max="120" value="80" oninput="updateSim()"/>
+          <label>Bike Speed: <span id="bikeVal">40</span> km/h</label>
+          <input type="range" id="bikeSlider" min="0" max="120" value="40" oninput="updateSim()"/>
+          <button class="sim-btn" id="v2vPlayBtn" onclick="toggleV2V()">▶ Start</button>
+        </div>
+      </div>
+      <div class="sim-card channel-card">
+        <h3>📡 Channel Status</h3>
+        <canvas id="channelCanvas" width="350" height="200"></canvas>
+        <div class="channel-legend">
+          <span class="leg active-ch">● Active</span>
+          <span class="leg free-ch">● Free</span>
+          <span class="leg occ-ch">● Occupied</span>
+        </div>
+        <div class="status-box" id="v2vStatus">System initializing…</div>
+      </div>
+    </div>
+
+    <div class="graph-row">
+      <div class="graph-card">
+        <h4>Speed vs Time</h4>
+        <canvas id="speedChart" width="400" height="200"></canvas>
+      </div>
+      <div class="graph-card">
+        <h4>Collision Risk vs Time</h4>
+        <canvas id="riskChart" width="400" height="200"></canvas>
+      </div>
+    </div>
+
+    <!-- MATLAB Code -->
+    <div class="code-section">
+      <h3>💻 MATLAB Source Code — V2V TTC Logic</h3>
+      <div class="code-block" id="v2vCode"></div>
+    </div>
+
+    <div class="section-divider"></div>
+    <h3 class="section-subtitle">📌 How It Works</h3>
+    <div class="cards-grid small-cards">
+      <div class="info-card"><div class="card-icon">⏱</div><h3>TTC Calculation</h3><p>Time-To-Collision = Distance ÷ Closing Speed. If TTC &lt; 2s, collision risk = 1.0 (critical).</p></div>
+      <div class="info-card"><div class="card-icon">📻</div><h3>Channel Switching</h3><p>On collision detection, system instantly switches from primary to backup channel for emergency braking data.</p></div>
+      <div class="info-card"><div class="card-icon">⚡</div><h3>Interference Handling</h3><p>When ego and front vehicle speeds are nearly equal (&lt;0.5 m/s difference), interference is detected and backup channel is used.</p></div>
+      <div class="info-card"><div class="card-icon">✅</div><h3>Normal Operation</h3><p>Best FREE channel (highest SNR) used for routine V2V telemetry. System continuously monitors all 6 channels.</p></div>
+    </div>
+  </section>
+
+  <!-- ===== AMBULANCE PAGE ===== -->
+  <section class="page" id="page-ambulance">
+    <div class="page-header">
+      <h2 class="page-title">🚑 Ambulance Priority System</h2>
+      <p class="page-sub">Emergency vehicle clearance via V2V spectrum communication</p>
+    </div>
+
+    <div class="sim-container">
+      <div class="sim-card road-card">
+        <h3>🚑 3D Traffic Simulation</h3>
+        <canvas id="ambCanvas" width="400" height="300"></canvas>
+        <div class="sim-controls">
+          <label>Ambulance Speed: <span id="ambVal">15</span> m/s</label>
+          <input type="range" id="ambSlider" min="5" max="30" value="15" oninput="updateAmb()"/>
+          <label>Vehicle Speed: <span id="vehVal">10</span> m/s</label>
+          <input type="range" id="vehSlider" min="5" max="25" value="10" oninput="updateAmb()"/>
+          <button class="sim-btn" id="ambPlayBtn" onclick="toggleAmb()">▶ Start</button>
+        </div>
+      </div>
+      <div class="sim-card channel-card">
+        <h3>🚨 Emergency Status</h3>
+        <div class="emergency-panel" id="emergencyPanel">
+          <div class="emg-item" id="ambMsg">
+            <span class="emg-icon">🚑</span>
+            <span id="ambMsgText">Proceed Normally</span>
+          </div>
+          <div class="emg-item" id="vehMsg">
+            <span class="emg-icon">🚗</span>
+            <span id="vehMsgText">Maintain Lane</span>
+          </div>
+          <div class="emg-item" id="chMsg">
+            <span class="emg-icon">📡</span>
+            <span id="chMsgText">Using Primary (885 MHz)</span>
+          </div>
+          <div class="risk-meter">
+            <label>Risk Level</label>
+            <div class="meter-bar"><div class="meter-fill" id="riskFill" style="width:0%"></div></div>
+            <span id="riskPct">0%</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="graph-row">
+      <div class="graph-card">
+        <h4>Speed Comparison</h4>
+        <canvas id="ambSpeedChart" width="400" height="200"></canvas>
+      </div>
+      <div class="graph-card">
+        <h4>Emergency Risk Level</h4>
+        <canvas id="ambRiskChart" width="400" height="200"></canvas>
+      </div>
+    </div>
+
+    <div class="code-section">
+      <h3>💻 MATLAB Source Code — Ambulance Priority</h3>
+      <div class="code-block" id="ambCode"></div>
+    </div>
+
+    <div class="section-divider"></div>
+    <h3 class="section-subtitle">📌 Emergency Logic Explained</h3>
+    <div class="cards-grid small-cards">
+      <div class="info-card"><div class="card-icon">🚨</div><h3>Priority Clearance</h3><p>Ambulance detected as primary vehicle. All civilian vehicles receive V2V signals to yield immediately.</p></div>
+      <div class="info-card"><div class="card-icon">📻</div><h3>Dedicated Channel</h3><p>Emergency V2V uses backup channel to avoid interference with normal traffic, ensuring reliable delivery.</p></div>
+      <div class="info-card"><div class="card-icon">⬅</div><h3>Lane Override</h3><p>TTC &lt; 2s triggers "Move LEFT Immediately" command broadcast to civilian vehicle via V2X protocol.</p></div>
+      <div class="info-card"><div class="card-icon">🌐</div><h3>3D Visualization</h3><p>Real-time 3D road simulation shows ambulance and civilian vehicle positions, speeds, and clearance status.</p></div>
+    </div>
+  </section>
+
+  <!-- ===== REFERENCES PAGE ===== -->
+  <section class="page" id="page-references">
+    <div class="page-header">
+      <h2 class="page-title">📚 References</h2>
+      <p class="page-sub">Research papers, standards, and prior art</p>
+      <button class="edit-btn admin-only" id="addRefBtn" onclick="addReference()" style="display:none">＋ Add Reference</button>
+    </div>
+    <div class="ref-grid" id="refGrid">
+      <!-- Injected by JS -->
+    </div>
+  </section>
+
+</main>
+
+<!-- ADMIN MODAL -->
+<div class="modal-overlay" id="modalOverlay" onclick="closeModal()"></div>
+<div class="modal" id="adminModal">
+  <div class="modal-header">
+    <h3 id="modalTitle">Edit Content</h3>
+    <button onclick="closeModal()">✕</button>
+  </div>
+  <div class="modal-body" id="modalBody"></div>
+  <div class="modal-footer">
+    <button class="btn-save" onclick="saveModal()">💾 Save</button>
+    <button class="btn-cancel" onclick="closeModal()">Cancel</button>
   </div>
 </div>
 
-<!-- ═══════════════════════════════════════════════════
-     PAGE 2 — AMBULANCE DASHBOARD
-═══════════════════════════════════════════════════ -->
-<div class="page" id="page-ambulance">
-  <nav class="topnav">
-    <div class="nav-left">
-      <span class="nav-logo">🚑 AMBULANCE</span>
-      <span class="nav-sep">|</span>
-      <span class="nav-sub">V2V Priority System</span>
-    </div>
-    <div class="nav-right">
-      <span class="nav-live"><span class="pulse-dot"></span>LIVE</span>
-      <button class="nav-btn active-page" onclick="showPage('ambulance')">🚑 AMBULANCE</button>
-      <button class="nav-btn" onclick="showPage('v2v')">📡 V2V LANES</button>
-      <button class="theme-btn" onclick="toggleTheme()">
-        <span class="theme-icon" id="themeIconNav">🌙</span>
-        <span id="themeTextNav">DARK</span>
-      </button>
-      <button class="nav-logout" onclick="logout()">LOGOUT</button>
-    </div>
-  </nav>
-
-  <main class="dash">
-
-    <!-- STATUS BAR -->
-    <div class="status-bar safe" id="a_statusBar">
-      <span class="s-dot"></span>
-      <span class="s-status" id="a_sStatus">SAFE</span>
-      <span class="s-action" id="a_sAction">GO STRAIGHT</span>
-      <span class="s-sep">─</span>
-      <span class="s-priority" id="a_sPriority">✓ NORMAL MODE</span>
-      <span class="s-ttc">TTC: <strong id="a_sTTC">∞</strong> s &nbsp;|&nbsp; T: <strong id="a_sTime">0.0</strong>s</span>
-    </div>
-
-    <!-- WARNING PANEL -->
-    <div class="warn-panel safe" id="a_warnPanel">⬤ SYSTEM NORMAL → USING 880 MHz</div>
-
-    <!-- SLIDERS -->
-    <div class="sec-title">🎚 Speed Control</div>
-    <div class="row2" style="margin-bottom:14px">
-      <div class="card">
-        <div class="card-hdr">🚑 Ambulance Speed</div>
-        <div class="slider-group">
-          <div class="slider-lbl">
-            <span class="slider-name">Speed</span>
-            <span><span class="slider-num" id="a_ambVal">15</span><span class="slider-unit"> m/s</span></span>
-          </div>
-          <input type="range" id="a_ambSlider" min="5" max="30" value="15"
-                 oninput="document.getElementById('a_ambVal').textContent=this.value"/>
-        </div>
-      </div>
-      <div class="card">
-        <div class="card-hdr">🚗 Vehicle Speed</div>
-        <div class="slider-group">
-          <div class="slider-lbl">
-            <span class="slider-name">Speed</span>
-            <span><span class="slider-num" id="a_vehVal">10</span><span class="slider-unit"> m/s</span></span>
-          </div>
-          <input type="range" id="a_vehSlider" min="0" max="25" value="10"
-                 oninput="document.getElementById('a_vehVal').textContent=this.value"/>
-        </div>
-      </div>
-    </div>
-
-    <!-- ROAD SIM + METRICS -->
-    <div class="sec-title">🛣️ V2V Road Simulation</div>
-    <div class="row3" style="margin-bottom:14px">
-      <div class="card span2">
-        <div class="card-hdr">🚑 Traffic Simulation (Distance-Based)</div>
-        <canvas class="sim-canvas" id="a_roadCanvas" height="140"></canvas>
-        <div class="veh-strip">
-          <div class="veh-pill amb">🚑 <span id="a_ambSpd">—</span> m/s · <span id="a_ambPos">—</span> m</div>
-          <div class="veh-pill veh">🚗 <span id="a_vehSpd">—</span> m/s · <span id="a_vehPos">—</span> m</div>
-          <div class="veh-pill dist">DIST <span id="a_distVal">—</span> m</div>
-        </div>
-      </div>
-      <div class="card">
-        <div class="card-hdr">⚙ System Metrics</div>
-        <div class="m-row"><span class="m-lbl">TTC</span><span class="m-val" id="a_ttc">∞</span><span class="m-unit">s</span></div>
-        <div class="m-row"><span class="m-lbl">Distance</span><span class="m-val" id="a_dist">—</span><span class="m-unit">m</span></div>
-        <div class="m-row"><span class="m-lbl">Collision%</span><span class="m-val" id="a_coll">—</span><span class="m-unit">%</span></div>
-        <div class="m-row"><span class="m-lbl">Rel.Speed</span><span class="m-val" id="a_rel">—</span><span class="m-unit">m/s</span></div>
-        <br/>
-        <div class="gauge-section">
-          <div class="g-label-row"><span class="g-lbl">Risk Level</span><span class="g-pct" id="a_gPct">0%</span></div>
-          <div class="gauge-track"><div class="gauge-fill" id="a_gFill" style="width:0%"></div></div>
-        </div>
-        <div class="ibox" id="a_iBox">No Interference Detected</div>
-      </div>
-    </div>
-
-    <!-- CHARTS -->
-    <div class="sec-title">📈 Real-Time Charts</div>
-    <div class="row3" style="margin-bottom:14px">
-      <div class="card">
-        <div class="card-hdr">📈 Speed vs Time</div>
-        <canvas id="a_speedChart"></canvas>
-      </div>
-      <div class="card">
-        <div class="card-hdr">⚠ Risk &amp; Collision Prob vs Time</div>
-        <canvas id="a_riskChart"></canvas>
-      </div>
-      <div class="card">
-        <div class="card-hdr">🎯 AI Collision Prediction vs Time</div>
-        <canvas id="a_aiChart"></canvas>
-      </div>
-    </div>
-
-  </main>
-
-  <footer class="ticker"><div class="ticker-inner">
-    ▲ AMBULANCE PRIORITY SYSTEM &nbsp;|&nbsp; V2V COMMUNICATION &nbsp;|&nbsp; EMERGENCY CHANNEL SWITCH &nbsp;|&nbsp; TTC MONITORING &nbsp;|&nbsp; INTERFERENCE DETECTION &nbsp;|&nbsp; AI COLLISION AVOIDANCE &nbsp;|&nbsp; ADAPTIVE FREQUENCY &nbsp;&nbsp;&nbsp;
-    ▲ AMBULANCE PRIORITY SYSTEM &nbsp;|&nbsp; V2V COMMUNICATION &nbsp;|&nbsp; EMERGENCY CHANNEL SWITCH &nbsp;|&nbsp; TTC MONITORING &nbsp;|&nbsp; INTERFERENCE DETECTION &nbsp;|&nbsp; AI COLLISION AVOIDANCE &nbsp;|&nbsp; ADAPTIVE FREQUENCY &nbsp;&nbsp;&nbsp;
-  </div></footer>
-</div>
-
-<!-- ═══════════════════════════════════════════════════
-     PAGE 3 — V2V LANES DASHBOARD
-═══════════════════════════════════════════════════ -->
-<div class="page" id="page-v2v">
-  <nav class="topnav">
-    <div class="nav-left">
-      <span class="nav-logo">📡 V2V LANES</span>
-      <span class="nav-sep">|</span>
-      <span class="nav-sub">MATLAB Lane Simulation</span>
-    </div>
-    <div class="nav-right">
-      <span class="nav-live"><span class="pulse-dot"></span>LIVE</span>
-      <button class="nav-btn" onclick="showPage('ambulance')">🚑 AMBULANCE</button>
-      <button class="nav-btn active-page" onclick="showPage('v2v')">📡 V2V LANES</button>
-      <button class="theme-btn" onclick="toggleTheme()">
-        <span class="theme-icon" id="themeIconNav2">🌙</span>
-        <span id="themeTextNav2">DARK</span>
-      </button>
-      <button class="nav-logout" onclick="logout()">LOGOUT</button>
-    </div>
-  </nav>
-
-  <main class="dash">
-
-    <!-- Orange Pipeline -->
-    <div class="card" style="margin-bottom:14px">
-      <div class="card-hdr">🧠 Orange Workflow Pipeline</div>
-      <div class="wf-nodes">
-        <span class="wf-node">📂 File</span><span class="wf-arr">→</span>
-        <span class="wf-node">📋 Data Table</span><span class="wf-arr">→</span>
-        <span class="wf-node">🔧 Select Columns</span><span class="wf-arr">→</span>
-        <span class="wf-node">📊 k-Means</span><span class="wf-arr">→</span>
-        <span class="wf-node">🤖 Predictions</span><span class="wf-arr">→</span>
-        <span class="wf-node hi">✅ FREE / OCCUPIED</span><span class="wf-arr">→</span>
-        <span class="wf-node hi">📡 Adaptive Channel</span>
-      </div>
-    </div>
-
-    <!-- MATLAB Warning -->
-    <div class="warn-panel safe" id="v_warnPanel">⬤ SYSTEM NORMAL → USING 880 MHz</div>
-
-    <!-- SLIDERS -->
-    <div class="sec-title">🎚 MATLAB Lane Controls</div>
-    <div class="row2" style="margin-bottom:14px">
-      <div class="card">
-        <div class="card-hdr">🚌 Ego &amp; Front Vehicle</div>
-        <div class="slider-grid">
-          <div class="slider-group">
-            <div class="slider-lbl">
-              <span class="slider-name">🚌 Ego Speed</span>
-              <span><span class="slider-num" id="v_egoVal">80</span><span class="slider-unit"> km/h</span></span>
-            </div>
-            <input type="range" class="r-warn" id="v_egoSlider" min="0" max="120" value="80"
-                   oninput="document.getElementById('v_egoVal').textContent=this.value"/>
-          </div>
-          <div class="slider-group">
-            <div class="slider-lbl">
-              <span class="slider-name">🏍 Front Vehicle</span>
-              <span><span class="slider-num" id="v_frontVal">40</span><span class="slider-unit"> km/h</span></span>
-            </div>
-            <input type="range" class="r-red" id="v_frontSlider" min="0" max="120" value="40"
-                   oninput="document.getElementById('v_frontVal').textContent=this.value"/>
-          </div>
-        </div>
-      </div>
-      <div class="card">
-        <div class="card-hdr">🚙 Ambulance &amp; Lane</div>
-        <div class="slider-grid">
-          <div class="slider-group">
-            <div class="slider-lbl">
-              <span class="slider-name">🚙 Ambulance</span>
-              <span><span class="slider-num" id="v_ambKmhVal">60</span><span class="slider-unit"> km/h</span></span>
-            </div>
-            <input type="range" id="v_ambKmhSlider" min="0" max="120" value="60"
-                   oninput="document.getElementById('v_ambKmhVal').textContent=this.value"/>
-          </div>
-          <div class="slider-group">
-            <div class="slider-lbl">
-              <span class="slider-name">🔄 Lane Select</span>
-              <span><span class="slider-num" id="v_laneVal" style="font-size:13px">CTR</span></span>
-            </div>
-            <input type="range" id="v_laneSlider" min="0" max="2" value="1" step="1"
-                   oninput="updateLaneLabel(this.value)"/>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- LANE SIM + METRICS -->
-    <div class="sec-title">🛣️ 3-Lane MATLAB Simulation</div>
-    <div class="row3" style="margin-bottom:14px">
-      <div class="card span2">
-        <div class="card-hdr">🛣️ Lane-Based Traffic Simulation (3-Lane)</div>
-        <canvas class="sim-canvas" id="v_laneCanvas" height="200"></canvas>
-        <div class="lane-labels"><span>◀ LEFT</span><span>CENTER</span><span>RIGHT ▶</span></div>
-      </div>
-      <div class="card">
-        <div class="card-hdr">📊 MATLAB Metrics</div>
-        <div class="m-row"><span class="m-lbl">Ego Speed</span><span class="m-val" id="v_egoSpd">—</span><span class="m-unit">km/h</span></div>
-        <div class="m-row"><span class="m-lbl">Front Speed</span><span class="m-val" id="v_frontSpd">—</span><span class="m-unit">km/h</span></div>
-        <div class="m-row"><span class="m-lbl">Center Risk</span><span class="m-val" id="v_risk">—</span><span class="m-unit"></span></div>
-        <div class="m-row"><span class="m-lbl">Active Lane</span><span class="m-val" id="v_lane" style="font-size:13px">CTR</span></div>
-        <br/>
-        <div class="gauge-section">
-          <div class="g-label-row"><span class="g-lbl">Collision Risk</span><span class="g-pct" id="v_gPct">0%</span></div>
-          <div class="gauge-track"><div class="gauge-fill" id="v_gFill" style="width:0%"></div></div>
-        </div>
-      </div>
-    </div>
-
-    <!-- CHANNEL PANEL -->
-    <div class="sec-title">📡 Adaptive Channel Selection</div>
-    <div class="row3" style="margin-bottom:14px">
-      <div class="card">
-        <div class="card-hdr">📡 Channel Signal Bars</div>
-        <div class="ch-bars" id="v_chBars"></div>
-        <div class="ch-assign">
-          <div class="ch-row"><span class="ch-lbl amb">🚑 Ambulance</span><span class="ch-freq" id="v_ambCh">880 MHz</span></div>
-          <div class="ch-row"><span class="ch-lbl veh">🚗 Vehicle</span><span class="ch-freq" id="v_vehCh">880 MHz</span></div>
-        </div>
-      </div>
-      <div class="card">
-        <div class="card-hdr">📊 Orange CSV Clusters</div>
-        <div class="csv-hdr">k-Means Channel Classification</div>
-        <table class="csv-tbl">
-          <thead><tr><th>Cluster</th><th>Freq</th><th>Power</th><th>SNR</th></tr></thead>
-          <tbody id="v_csvBody"></tbody>
-        </table>
-      </div>
-      <div class="card">
-        <div class="card-hdr">📈 Channel Power Chart</div>
-        <canvas id="v_channelChart"></canvas>
-      </div>
-    </div>
-
-    <!-- CHARTS -->
-    <div class="sec-title">📈 Real-Time Charts</div>
-    <div class="row2" style="margin-bottom:14px">
-      <div class="card">
-        <div class="card-hdr">🏍 Ego &amp; Front Speed vs Time</div>
-        <canvas id="v_speedChart"></canvas>
-      </div>
-      <div class="card">
-        <div class="card-hdr">🎯 MATLAB: AI Collision Prediction vs Time</div>
-        <canvas id="v_riskChart"></canvas>
-      </div>
-    </div>
-
-  </main>
-
-  <footer class="ticker"><div class="ticker-inner">
-    ▲ V2V LANE SIMULATION &nbsp;|&nbsp; MATLAB 3-LANE MODEL &nbsp;|&nbsp; ORANGE DATA MINING &nbsp;|&nbsp; k-MEANS CLUSTERING &nbsp;|&nbsp; ADAPTIVE CHANNEL SELECTION &nbsp;|&nbsp; AI COLLISION PREDICTION &nbsp;|&nbsp; AMBULANCE PRIORITY PROTOCOL &nbsp;&nbsp;&nbsp;
-    ▲ V2V LANE SIMULATION &nbsp;|&nbsp; MATLAB 3-LANE MODEL &nbsp;|&nbsp; ORANGE DATA MINING &nbsp;|&nbsp; k-MEANS CLUSTERING &nbsp;|&nbsp; ADAPTIVE CHANNEL SELECTION &nbsp;|&nbsp; AI COLLISION PREDICTION &nbsp;|&nbsp; AMBULANCE PRIORITY PROTOCOL &nbsp;&nbsp;&nbsp;
-  </div></footer>
-</div>
-
-<!-- ═══════════════════════════════════════════════════
-     JAVASCRIPT
-═══════════════════════════════════════════════════ -->
-<script>
-// ── CONSTANTS ──────────────────────────────────────────────────────────
-const PASSKEY   = 'V2V2024';
-const FREQUENCY = [880, 890, 905, 920, 940];
-const POWER_DBM = [-74, -82, -90, -96, -100];
-const LANE_NAMES= ['LEFT','CENTER','RIGHT'];
-const CSV_MOCK  = [
-  {cluster:'C1',frequency:880,power:-74,snr:28.4},
-  {cluster:'C1',frequency:890,power:-82,snr:22.1},
-  {cluster:'C2',frequency:905,power:-90,snr:15.6},
-  {cluster:'C2',frequency:920,power:-96,snr:10.2},
-  {cluster:'C2',frequency:940,power:-100,snr:6.8},
-];
-const MAX_PTS = 80;
-
-// ── STATE ──────────────────────────────────────────────────────────────
-let ambPos=10, vehPos=60, simT=0;
-let mTrafficY=[100, 85, 70];
-let darkMode=true;
-let currentPage='landing';
-let simInterval=null;
-
-// ── PAGE ROUTING ───────────────────────────────────────────────────────
-function showPage(name) {
-  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
-  document.getElementById('page-'+name).classList.add('active');
-  currentPage=name;
-}
-function checkPasskey() {
-  const val=document.getElementById('passkeyInput').value.trim();
-  if(val===PASSKEY){
-    document.getElementById('keyError').classList.remove('show');
-    showPage('ambulance');
-    initCharts();
-    if(!simInterval) simInterval=setInterval(tick,100);
-    setTimeout(()=>{
-      resizeCanvases();
-      renderChBars('SAFE','v_chBars');
-      renderCsvTable();
-    },100);
-  } else {
-    document.getElementById('keyError').classList.add('show');
-    document.getElementById('passkeyInput').value='';
-  }
-}
-function logout(){
-  clearInterval(simInterval); simInterval=null;
-  ambPos=10; vehPos=60; simT=0; mTrafficY=[100,85,70];
-  showPage('landing');
-  document.getElementById('passkeyInput').value='';
-}
-
-// ── THEME TOGGLE ───────────────────────────────────────────────────────
-function toggleTheme(){
-  darkMode=!darkMode;
-  document.documentElement.setAttribute('data-theme',darkMode?'dark':'light');
-  const icon=darkMode?'🌙':'☀️', text=darkMode?'DARK':'LIGHT';
-  ['themeIconLanding','themeIconNav','themeIconNav2'].forEach(id=>{
-    const el=document.getElementById(id); if(el) el.textContent=icon;
-  });
-  ['themeTextLanding','themeTextNav','themeTextNav2'].forEach(id=>{
-    const el=document.getElementById(id); if(el) el.textContent=text;
-  });
-  // Update charts for light mode
-  if(chartsInitialized) updateChartsTheme();
-}
-
-// ── HELPERS ────────────────────────────────────────────────────────────
-function bestChannels(){
-  const best=POWER_DBM.indexOf(Math.max(...POWER_DBM));
-  const tmp=[...POWER_DBM]; tmp[best]=-999;
-  const alt=tmp.indexOf(Math.max(...tmp));
-  return {best,alt};
-}
-function computeRisk(a,v,d){
-  if(d<=0)d=100;
-  const closing=a-v, ttc=closing>0?d/closing:Infinity;
-  if(ttc>5)  return {risk:0.0,status:'SAFE',      action:'GO STRAIGHT',   ttc};
-  if(ttc>2)  return {risk:0.5,status:'WARNING',   action:'PREPARE RIGHT', ttc};
-  return          {risk:1.0,status:'EMERGENCY',  action:'MOVE LEFT NOW', ttc};
-}
-function sigmoid(d,r){return 1/(1+Math.exp(-(-0.05*d+0.1*r)))}
-function getLaneRisk(egoMs,frontMs,dist){return sigmoid(Math.max(1,dist),egoMs-frontMs)}
-
-// ── LANE LABEL ─────────────────────────────────────────────────────────
-function updateLaneLabel(v){
-  document.getElementById('v_laneVal').textContent=LANE_NAMES[parseInt(v)].slice(0,3);
-  document.getElementById('v_lane').textContent=LANE_NAMES[parseInt(v)].slice(0,3);
-}
-
-// ── CHANNEL BARS ───────────────────────────────────────────────────────
-function renderChBars(status, containerId){
-  const {best,alt}=bestChannels();
-  const c=document.getElementById(containerId);
-  c.innerHTML='';
-  FREQUENCY.forEach((f,i)=>{
-    const p=POWER_DBM[i];
-    const pct=Math.max(12,Math.min(88,88-(Math.abs(p)-74)*2.6));
-    let role='other';
-    if(status==='EMERGENCY'&&i===alt) role='safety';
-    else if(status!=='EMERGENCY'&&i===best) role='best';
-    const wrap=document.createElement('div'); wrap.className='ch-col';
-    const pwr=document.createElement('div'); pwr.className='ch-pwr-lbl'; pwr.textContent=p;
-    const b=document.createElement('div'); b.className=`ch-bar ${role}`; b.style.height=pct+'%';
-    const lbl=document.createElement('div'); lbl.className='ch-freq-lbl'; lbl.textContent=f;
-    wrap.append(pwr,b,lbl); c.appendChild(wrap);
-  });
-}
-
-// ── CSV TABLE ──────────────────────────────────────────────────────────
-function renderCsvTable(){
-  const tbody=document.getElementById('v_csvBody');
-  tbody.innerHTML='';
-  CSV_MOCK.forEach(ch=>{
-    const tr=document.createElement('tr');
-    const cls=ch.cluster==='C1'?'badge-c1':'badge-c2';
-    tr.innerHTML=`<td><span class="${cls}">${ch.cluster}</span></td><td>${ch.frequency}</td><td>${ch.power}</td><td>${ch.snr}</td>`;
-    tbody.appendChild(tr);
-  });
-}
-
-// ── STATUS BAR ─────────────────────────────────────────────────────────
-function setStatusBar(status, action, msg, ttc, timeVal){
-  const bar=document.getElementById('a_statusBar');
-  const cls=status==='EMERGENCY'?'emergency':status==='WARNING'?'warning':'safe';
-  bar.className='status-bar '+cls;
-  document.getElementById('a_sStatus').textContent=status;
-  document.getElementById('a_sAction').textContent=action;
-  document.getElementById('a_sPriority').textContent=msg;
-  document.getElementById('a_sTTC').textContent=ttc===Infinity||ttc>=9999?'∞':ttc.toFixed(1);
-  document.getElementById('a_sTime').textContent=timeVal.toFixed(1);
-}
-function setWarnPanel(id, level, freq, altFreq){
-  const w=document.getElementById(id);
-  if(level>0.7){
-    w.className='warn-panel emergency';
-    w.textContent=`⚠ COLLISION DETECTED → SWITCHED TO ${altFreq} MHz`;
-  } else if(level>0.3){
-    w.className='warn-panel warning';
-    w.textContent=`⚠ CAUTION → PREPARE LANE CHANGE → ${altFreq} MHz`;
-  } else {
-    w.className='warn-panel safe';
-    w.textContent=`⬤ SYSTEM NORMAL → USING ${freq} MHz`;
-  }
-}
-
-// ── ROAD CANVAS ────────────────────────────────────────────────────────
-const roadCanvas=document.getElementById('a_roadCanvas');
-const rctx=roadCanvas.getContext('2d');
-
-function drawRoad(aPos,vPos,status){
-  const W=roadCanvas.width||600, H=roadCanvas.height;
-  const isDark=darkMode;
-  rctx.clearRect(0,0,W,H);
-  rctx.fillStyle=isDark?'#030b18':'#e0ecf6'; rctx.fillRect(0,0,W,H);
-  const ry=H/2, rh=54;
-  rctx.fillStyle=isDark?'#071428':'#c8dcea'; rctx.fillRect(0,ry-rh/2,W,rh);
-  rctx.strokeStyle=isDark?'rgba(255,255,255,0.07)':'rgba(0,0,0,0.12)';
-  rctx.lineWidth=1;
-  rctx.beginPath(); rctx.moveTo(0,ry-rh/2); rctx.lineTo(W,ry-rh/2);
-  rctx.moveTo(0,ry+rh/2); rctx.lineTo(W,ry+rh/2); rctx.stroke();
-  rctx.setLineDash([12,10]);
-  rctx.strokeStyle=isDark?'rgba(245,197,24,0.18)':'rgba(180,140,0,0.3)';
-  rctx.lineWidth=1.5;
-  rctx.beginPath(); rctx.moveTo(0,ry); rctx.lineTo(W,ry); rctx.stroke();
-  rctx.setLineDash([]);
-  for(let d=0;d<=100;d+=25){
-    const x=(d/100)*W;
-    rctx.strokeStyle=isDark?'rgba(14,36,72,0.9)':'rgba(160,192,220,0.5)';
-    rctx.lineWidth=0.5;
-    rctx.beginPath(); rctx.moveTo(x,ry-rh/2-3); rctx.lineTo(x,ry+rh/2+3); rctx.stroke();
-    rctx.fillStyle=isDark?'#163260':'#7aa5cc';
-    rctx.font='9px Share Tech Mono,monospace';
-    rctx.fillText(d+'m',x+2,ry-rh/2-6);
-  }
-  const aX=Math.round((aPos/100)*W), vX=Math.round((vPos/100)*W);
-  const lc=status==='EMERGENCY'?'rgba(255,59,59,0.22)':status==='WARNING'?'rgba(255,145,0,0.18)':'rgba(0,230,118,0.13)';
-  const mn=Math.min(aX,vX),mx=Math.max(aX,vX);
-  rctx.fillStyle=lc; rctx.fillRect(mn,ry-7,mx-mn,14);
-  drawVBox(rctx,'#ff3b3b',aX,ry,'A');
-  drawVBox(rctx,'#00e5ff',vX,ry,'V');
-}
-
-function drawVBox(ctx,color,x,y,lbl){
-  const W=28,H=16;
-  ctx.fillStyle=color+'28'; ctx.beginPath(); ctx.arc(x,y,18,0,Math.PI*2); ctx.fill();
-  ctx.fillStyle=color;
-  ctx.beginPath();
-  if(ctx.roundRect) ctx.roundRect(x-W/2,y-H/2,W,H,3); else ctx.rect(x-W/2,y-H/2,W,H);
-  ctx.fill();
-  ctx.fillStyle='#fff'; ctx.font='bold 10px Share Tech Mono,monospace';
-  ctx.textAlign='center'; ctx.textBaseline='middle';
-  ctx.fillText(lbl,x,y);
-  ctx.textAlign='left'; ctx.textBaseline='alphabetic';
-}
-
-// ── LANE CANVAS ────────────────────────────────────────────────────────
-const laneCanvas=document.getElementById('v_laneCanvas');
-const lctx=laneCanvas.getContext('2d');
-
-function drawLanes(egoY,tPos,risk,activeLane){
-  const W=laneCanvas.width||600, H=laneCanvas.height;
-  const isDark=darkMode;
-  lctx.clearRect(0,0,W,H);
-  lctx.fillStyle=isDark?'#030b18':'#e0ecf6'; lctx.fillRect(0,0,W,H);
-  const lW=W/3;
-  for(let i=0;i<3;i++){
-    lctx.fillStyle=i===activeLane
-      ?(isDark?'rgba(0,229,255,0.04)':'rgba(0,118,168,0.07)')
-      :(isDark?'#071428':'#c8dcea');
-    lctx.fillRect(i*lW,0,lW,H);
-    if(i>0){
-      lctx.setLineDash([8,7]);
-      lctx.strokeStyle=isDark?'rgba(255,255,255,0.07)':'rgba(0,0,0,0.12)';
-      lctx.lineWidth=1;
-      lctx.beginPath(); lctx.moveTo(i*lW,0); lctx.lineTo(i*lW,H); lctx.stroke();
-      lctx.setLineDash([]);
-    }
-    lctx.fillStyle=isDark?'rgba(74,127,165,0.5)':'rgba(80,120,160,0.5)';
-    lctx.font='8px Share Tech Mono,monospace'; lctx.textAlign='center';
-    lctx.fillText(LANE_NAMES[i],i*lW+lW/2,14);
-  }
-  for(let d=0;d<=120;d+=30){
-    const y=H-(d/120)*H;
-    lctx.strokeStyle=isDark?'rgba(14,36,72,0.8)':'rgba(150,185,215,0.5)';
-    lctx.lineWidth=0.5;
-    lctx.beginPath(); lctx.moveTo(0,y); lctx.lineTo(W,y); lctx.stroke();
-    lctx.fillStyle=isDark?'#163260':'#7aa5cc';
-    lctx.font='8px Share Tech Mono,monospace'; lctx.textAlign='left';
-    lctx.fillText(d+'m',2,y-2);
-  }
-  const egoSY=H-(10/120)*H, egoSX=activeLane*lW+lW/2;
-  drawLaneCar(lctx,egoSX,egoSY,'#00e5ff','E',lW*0.52);
-  tPos.forEach((pos,i)=>{
-    const ty=H-(pos/120)*H, tx=i*lW+lW/2;
-    const col=(i===1&&risk>0.7)?'#ff3b3b':'#00e676';
-    drawLaneCar(lctx,tx,ty,col,String(i+1),lW*0.52);
-  });
-  lctx.textAlign='left';
-}
-
-function drawLaneCar(ctx,x,y,color,label,size){
-  const w=size*.5,h=size*.72;
-  ctx.fillStyle=color+'2a'; ctx.beginPath(); ctx.arc(x,y,h*.8,0,Math.PI*2); ctx.fill();
-  ctx.fillStyle=color;
-  ctx.beginPath();
-  if(ctx.roundRect) ctx.roundRect(x-w/2,y-h/2,w,h,3); else ctx.rect(x-w/2,y-h/2,w,h);
-  ctx.fill();
-  ctx.fillStyle='#fff'; ctx.font=`bold ${Math.round(h*.4)}px Share Tech Mono,monospace`;
-  ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText(label,x,y);
-}
-
-// ── CANVAS RESIZE ──────────────────────────────────────────────────────
-function resizeCanvases(){
-  const rc=document.getElementById('a_roadCanvas');
-  if(rc) rc.width=rc.parentElement.offsetWidth-32;
-  const lc=document.getElementById('v_laneCanvas');
-  if(lc) lc.width=lc.parentElement.offsetWidth-32;
-}
-window.addEventListener('resize',resizeCanvases);
-
-// ── CHARTS ─────────────────────────────────────────────────────────────
-let chartsInitialized=false;
-let aSpeedChart,aRiskChart,aAiChart,vSpeedChart,vRiskChart,vChannelChart;
-
-function chartOpts(yTitle){
-  const isDark=darkMode;
-  const gridC=isDark?'rgba(14,36,72,0.9)':'rgba(180,205,225,0.7)';
-  const tickC=isDark?'#4a7fa5':'#5588aa';
-  return {
-    responsive:true,maintainAspectRatio:true,
-    animation:{duration:150},
-    plugins:{legend:{labels:{color:tickC,font:{family:'Share Tech Mono',size:10}}}},
-    scales:{
-      x:{ticks:{color:tickC,font:{size:9},maxTicksLimit:6},grid:{color:gridC}},
-      y:{ticks:{color:tickC,font:{size:9}},grid:{color:gridC},
-        ...(yTitle?{title:{display:true,text:yTitle,color:tickC,font:{size:9}}}:{})}
-    }
-  };
-}
-
-function initCharts(){
-  if(chartsInitialized){
-    [aSpeedChart,aRiskChart,aAiChart,vSpeedChart,vRiskChart,vChannelChart].forEach(c=>{if(c)c.destroy()});
-    aSpeedChart=aRiskChart=aAiChart=vSpeedChart=vRiskChart=vChannelChart=null;
-  }
-
-  aSpeedChart=new Chart(document.getElementById('a_speedChart').getContext('2d'),{
-    type:'line',data:{labels:[],datasets:[
-      {label:'Ambulance',data:[],borderColor:'#ff3b3b',backgroundColor:'rgba(255,59,59,.07)',borderWidth:2,tension:.4,pointRadius:0,fill:true},
-      {label:'Vehicle',data:[],borderColor:'#00e5ff',backgroundColor:'rgba(0,229,255,.07)',borderWidth:2,tension:.4,pointRadius:0,fill:true}
-    ]},options:{...chartOpts('m/s'),scales:{...chartOpts('m/s').scales}}
-  });
-
-  aRiskChart=new Chart(document.getElementById('a_riskChart').getContext('2d'),{
-    type:'line',data:{labels:[],datasets:[
-      {label:'Risk',data:[],borderColor:'#ff9100',backgroundColor:'rgba(255,145,0,.1)',borderWidth:2,tension:.4,pointRadius:0,fill:true},
-      {label:'Collision Prob',data:[],borderColor:'#ff3b3b',backgroundColor:'rgba(255,59,59,.07)',borderWidth:1.5,tension:.4,pointRadius:0,borderDash:[5,5],fill:false}
-    ]},options:{...chartOpts(),scales:{...chartOpts().scales,y:{...chartOpts().scales.y,min:0,max:1}}}
-  });
-
-  aAiChart=new Chart(document.getElementById('a_aiChart').getContext('2d'),{
-    type:'line',data:{labels:[],datasets:[
-      {label:'AI Collision Prediction',data:[],borderColor:'#ff3b3b',backgroundColor:'rgba(255,59,59,.1)',borderWidth:2,tension:.4,pointRadius:0,fill:true}
-    ]},options:{...chartOpts(),scales:{...chartOpts().scales,y:{...chartOpts().scales.y,min:0,max:1}}}
-  });
-
-  vSpeedChart=new Chart(document.getElementById('v_speedChart').getContext('2d'),{
-    type:'line',data:{labels:[],datasets:[
-      {label:'Ego Speed',data:[],borderColor:'#ffd740',backgroundColor:'rgba(255,215,64,.07)',borderWidth:2,tension:.4,pointRadius:0,fill:true},
-      {label:'Front Speed',data:[],borderColor:'#00e676',backgroundColor:'rgba(0,230,118,.07)',borderWidth:2,tension:.4,pointRadius:0,fill:true}
-    ]},options:{...chartOpts('km/h'),scales:{...chartOpts('km/h').scales,y:{...chartOpts('km/h').scales.y,min:0,max:130}}}
-  });
-
-  vRiskChart=new Chart(document.getElementById('v_riskChart').getContext('2d'),{
-    type:'line',data:{labels:[],datasets:[
-      {label:'MATLAB Collision Prob',data:[],borderColor:'#ff3b3b',backgroundColor:'rgba(255,59,59,.1)',borderWidth:2,tension:.4,pointRadius:0,fill:true}
-    ]},options:{...chartOpts(),scales:{...chartOpts().scales,y:{...chartOpts().scales.y,min:0,max:1}}}
-  });
-
-  vChannelChart=new Chart(document.getElementById('v_channelChart').getContext('2d'),{
-    type:'bar',data:{
-      labels:FREQUENCY.map(f=>f+' MHz'),
-      datasets:[{
-        label:'Power (dBm)',
-        data:POWER_DBM,
-        backgroundColor:['rgba(0,230,118,.4)','rgba(0,229,255,.3)','rgba(0,148,178,.3)','rgba(74,127,165,.3)','rgba(74,127,165,.2)'],
-        borderColor:['#00e676','#00e5ff','#0097b2','#4a7fa5','#4a7fa5'],
-        borderWidth:2,borderRadius:4
-      }]
-    },
-    options:{...chartOpts('dBm')}
-  });
-
-  chartsInitialized=true;
-}
-
-function updateChartsTheme(){
-  [aSpeedChart,aRiskChart,aAiChart,vSpeedChart,vRiskChart,vChannelChart].forEach(c=>{
-    if(!c) return;
-    const isDark=darkMode;
-    const gridC=isDark?'rgba(14,36,72,0.9)':'rgba(180,205,225,0.7)';
-    const tickC=isDark?'#4a7fa5':'#5588aa';
-    if(c.options.scales){
-      Object.values(c.options.scales).forEach(s=>{
-        if(s.ticks) s.ticks.color=tickC;
-        if(s.grid) s.grid.color=gridC;
-        if(s.title) s.title.color=tickC;
-      });
-    }
-    if(c.options.plugins?.legend?.labels) c.options.plugins.legend.labels.color=tickC;
-    c.update();
-  });
-}
-
-function pushChart(chart,label,...vals){
-  if(!chart) return;
-  chart.data.labels.push(label);
-  vals.forEach((v,i)=>chart.data.datasets[i].data.push(v));
-  if(chart.data.labels.length>MAX_PTS){
-    chart.data.labels.shift();
-    chart.data.datasets.forEach(ds=>ds.data.shift());
-  }
-  chart.update('none');
-}
-
-// ── MAIN TICK ──────────────────────────────────────────────────────────
-function tick(){
-  const dt=0.1;
-  simT+=dt;
-
-  // Ambulance page values
-  const ambSpd=parseFloat(document.getElementById('a_ambSlider').value);
-  const vehSpd=parseFloat(document.getElementById('a_vehSlider').value);
-  ambPos+=ambSpd*dt; vehPos+=vehSpd*dt;
-  if(ambPos>100) ambPos=0;
-  if(vehPos>100) vehPos=0;
-
-  const dist=Math.abs(vehPos-ambPos);
-  const {risk,status,action,ttc}=computeRisk(ambSpd,vehSpd,dist);
-  const collProb=sigmoid(dist,ambSpd-vehSpd);
-  const interf=Math.abs(ambSpd-vehSpd)<1.0;
-  const {best,alt}=bestChannels();
-  let ambCh,vehCh,prMsg;
-  if(status==='EMERGENCY'){ambCh=FREQUENCY[best];vehCh=FREQUENCY[alt];prMsg='🚑 PRIORITY ACTIVATED'}
-  else if(status==='WARNING'){ambCh=FREQUENCY[alt];vehCh=FREQUENCY[alt];prMsg='⚠ SHARED CHANNEL'}
-  else{ambCh=FREQUENCY[best];vehCh=FREQUENCY[best];prMsg='✅ NORMAL MODE'}
-
-  // V2V lane page values
-  const egoKmh=parseFloat(document.getElementById('v_egoSlider').value);
-  const frontKmh=parseFloat(document.getElementById('v_frontSlider').value);
-  const activeLane=parseInt(document.getElementById('v_laneSlider').value);
-  const egoMs=egoKmh/3.6, frontMs=frontKmh/3.6;
-  mTrafficY=mTrafficY.map(y=>{ y-=frontMs*dt; if(y<0)y=120; return y; });
-  const centerDist=Math.max(1,mTrafficY[1]-10);
-  const mRisk=getLaneRisk(egoMs,frontMs,centerDist);
-  const mRiskPct=(mRisk*100).toFixed(0);
-
-  const lbl=simT.toFixed(1)+'s';
-
-  // ── Update Ambulance page ──
-  if(currentPage==='ambulance'){
-    setStatusBar(status,action,prMsg,ttc,simT);
-    setWarnPanel('a_warnPanel',risk,FREQUENCY[best],FREQUENCY[alt]);
-
-    document.getElementById('a_ttc').textContent=ttc===Infinity?'∞':ttc.toFixed(1);
-    document.getElementById('a_dist').textContent=dist.toFixed(1);
-    document.getElementById('a_coll').textContent=(collProb*100).toFixed(1);
-    document.getElementById('a_rel').textContent=(ambSpd-vehSpd).toFixed(2);
-    document.getElementById('a_distVal').textContent=dist.toFixed(1);
-    document.getElementById('a_ambSpd').textContent=ambSpd.toFixed(1);
-    document.getElementById('a_vehSpd').textContent=vehSpd.toFixed(1);
-    document.getElementById('a_ambPos').textContent=ambPos.toFixed(1);
-    document.getElementById('a_vehPos').textContent=vehPos.toFixed(1);
-
-    const rPct=(risk*100).toFixed(0);
-    document.getElementById('a_gFill').style.width=rPct+'%';
-    document.getElementById('a_gPct').textContent=rPct+'%';
-    const iBox=document.getElementById('a_iBox');
-    iBox.textContent=interf?'⚠ INTERFERENCE POSSIBLE – AMBULANCE PRIORITY':'No Interference Detected';
-    iBox.className='ibox'+(interf?' alert':'');
-
-    roadCanvas.width=roadCanvas.parentElement.offsetWidth-32;
-    drawRoad(ambPos,vehPos,status);
-    pushChart(aSpeedChart,lbl,ambSpd,vehSpd);
-    pushChart(aRiskChart,lbl,risk,collProb);
-    pushChart(aAiChart,lbl,collProb);
-  }
-
-  // ── Update V2V page ──
-  if(currentPage==='v2v'){
-    setWarnPanel('v_warnPanel',mRisk,FREQUENCY[best],FREQUENCY[alt]);
-    renderChBars(mRisk>0.7?'EMERGENCY':'SAFE','v_chBars');
-
-    document.getElementById('v_egoSpd').textContent=egoKmh.toFixed(0);
-    document.getElementById('v_frontSpd').textContent=frontKmh.toFixed(0);
-    document.getElementById('v_risk').textContent=mRisk.toFixed(3);
-    document.getElementById('v_gFill').style.width=mRiskPct+'%';
-    document.getElementById('v_gPct').textContent=mRiskPct+'%';
-    document.getElementById('v_ambCh').textContent=(mRisk>0.7?FREQUENCY[best]:FREQUENCY[best])+' MHz';
-    document.getElementById('v_vehCh').textContent=(mRisk>0.7?FREQUENCY[alt]:FREQUENCY[best])+' MHz';
-
-    laneCanvas.width=laneCanvas.parentElement.offsetWidth-32;
-    drawLanes(10,mTrafficY,mRisk,activeLane);
-    pushChart(vSpeedChart,lbl,egoKmh,frontKmh);
-    pushChart(vRiskChart,lbl,mRisk);
-  }
-}
-
-// ── INIT ───────────────────────────────────────────────────────────────
-window.addEventListener('load',()=>{
-  renderChBars('SAFE','v_chBars');
-  renderCsvTable();
-});
-</script>
+<script src="js/data.js"></script>
+<script src="js/simulation.js"></script>
+<script src="js/main.js"></script>
 </body>
 </html>
