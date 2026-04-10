@@ -374,6 +374,20 @@ canvas{border-radius:8px;background:var(--bg);display:block;max-width:100%}
         <div class="card"><span class="card-ico">🚗</span><h3>V2V Communication Parameters</h3><ul class="blist"><li>Vehicle speed input: 0–120 km/h (adjustable)</li><li>TTC threshold: &lt;2s = High Risk, &lt;4s = Medium</li><li>Closing speed determines collision imminence</li><li>Real-time risk scoring: 0, 0.7, or 1.0</li></ul></div>
         <div class="card"><span class="card-ico">📡</span><h3>Spectrum Sensing Method</h3><ul class="blist"><li>Energy detection on each 5 MHz sub-band</li><li>Threshold-based occupancy classification</li><li>Fast switching (&lt;50ms) for safety-critical data</li><li>Cognitive radio: sense → decide → transmit</li></ul></div>
       </div>
+      
+<div style="background: linear-gradient(135deg, #f8f9ff 0%, #e8ecf8 100%); border: 1.5px solid #c0c8e8; border-radius: 14px; padding: 28px 32px; margin-bottom: 28px; box-shadow: 0 4px 18px rgba(80,100,180,0.08);">
+  <h3 style="font-weight: 800; color: #2d3a6e; font-size: 1.18rem; margin: 0 0 14px 0; letter-spacing: 0.01em;">
+    📌 Where Did We Get the Dataset?
+  </h3>
+  <p style="margin: 0 0 12px 0; color: #333; font-size: 0.97rem; line-height: 1.75;">
+    The dataset used in this project is derived from the base research paper titled 
+    <strong>"A Real Time Measurement Based Spectrum Occupancy Investigation in North-Western India for Cognitive Radio Applications."</strong> 
+    This paper provides real-time spectrum measurement data obtained using a spectrum analyzer.
+  </p>
+  <p style="margin: 0; color: #333; font-size: 0.97rem; line-height: 1.75;">
+    The required parameters such as <strong>Frequency</strong>, <strong>Power</strong>, and <strong>SNR</strong> were extracted from the graphical representations and results presented in the paper. With the help of <strong>AI-assisted analysis</strong>, these data points were carefully obtained from the graphs and then processed using <strong>MATLAB</strong>. The extracted values were organized into a structured format and converted into a <strong>CSV dataset</strong>, which was further used for <strong>classification and channel selection</strong> in the system.
+  </p>
+</div>
       <div class="sec-div"></div>
       <p class="sec-sub">📋 Raw Channel Dataset</p>
       <div class="tbl-wrap">
@@ -754,6 +768,7 @@ function showToast(msg,type){
 }
 
 // ========== CHANNEL DATA ==========
+
 const CF=[880,885,890,895,900,905];
 const CS=[22,14,18,11,20,12];
 const CST=['OCC','FREE','OCC','FREE','OCC','FREE'];
